@@ -172,6 +172,18 @@ if ask_yn "Set up a project now?"; then
     fi
   done
 
+  # Copy skills
+  for skill_dir in "$SCRIPT_DIR"/.claude/skills/*/; do
+    skill_name="$(basename "$skill_dir")"
+    mkdir -p "$PROJECT_DIR/.claude/skills/$skill_name"
+    if [ ! -f "$PROJECT_DIR/.claude/skills/$skill_name/SKILL.md" ]; then
+      cp "$skill_dir/SKILL.md" "$PROJECT_DIR/.claude/skills/$skill_name/SKILL.md"
+      echo -e "  ${GREEN}✓${NC} .claude/skills/$skill_name/SKILL.md (installed)"
+    else
+      echo -e "  ${GREEN}✓${NC} .claude/skills/$skill_name/SKILL.md (already exists)"
+    fi
+  done
+
   # Copy project settings
   if [ ! -f "$PROJECT_DIR/.claude/settings.json" ]; then
     cp "$SCRIPT_DIR/settings/project-settings.json" "$PROJECT_DIR/.claude/settings.json"
@@ -200,6 +212,7 @@ echo "  Global hooks:    ~/.claude/hooks/"
 echo "  Global settings: ~/.claude/settings.json"
 if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "." ]; then
   echo "  Project:         $PROJECT_DIR"
+  echo "  Skills:          $PROJECT_DIR/.claude/skills/"
 fi
 echo ""
 echo "Next steps:"
