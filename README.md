@@ -237,7 +237,32 @@ The two project hooks in this starter kit are examples. Replace them with whatev
 
 ---
 
-## 7. RETRO.md -- Learning Across Tasks
+## 7. Skills -- Workflow Intelligence
+
+Skills are markdown files in `.claude/skills/` that give Claude Code specialized domain knowledge for specific workflow activities. While CLAUDE.md defines project rules and constraints, skills teach Claude *how* to perform specific workflow processes -- creating task files, running retrospectives, validating plans, and following the development loop.
+
+### Included Skills
+
+| Skill | Location | Purpose |
+|-------|----------|---------|
+| **workflow** | `.claude/skills/workflow/SKILL.md` | The 6-phase development loop from plan to close-out |
+| **task-manager** | `.claude/skills/task-manager/SKILL.md` | Task file lifecycle: create, update, resume, complete |
+| **plan-review** | `.claude/skills/plan-review/SKILL.md` | 6-point pre-execution validation checklist |
+| **retro** | `.claude/skills/retro/SKILL.md` | Retrospective entry format and quality guidelines |
+
+### How Skills Work
+
+Claude Code automatically reads skill files when it needs domain knowledge for a matching activity. You do not need to reference them explicitly -- they are available as context whenever relevant.
+
+### Customizing Skills
+
+- **Edit existing skills** to match your team's workflow terminology or add project-specific examples
+- **Add new skills** by creating a new directory under `.claude/skills/` with a `SKILL.md` file
+- Each skill file starts with YAML frontmatter (`name` and `description`) followed by markdown content
+
+---
+
+## 8. RETRO.md -- Learning Across Tasks
 
 RETRO.md is an append-only log of lessons learned across all tasks. It lives at `docs/tasks/RETRO.md` in your project.
 
@@ -272,7 +297,7 @@ Good patterns become institutional knowledge that compounds over time.
 
 ---
 
-## 8. Settings Files
+## 9. Settings Files
 
 Claude Code uses two settings files that control hooks, environment variables, and other configuration.
 
@@ -353,7 +378,7 @@ Lives in your project directory. Contains:
 
 ---
 
-## 9. Advanced: Agent Teams
+## 10. Advanced: Agent Teams
 
 Agent teams let multiple Claude Code instances work in parallel on different parts of a task. This is powerful but adds coordination overhead. Use it only when the math works out.
 
@@ -402,7 +427,7 @@ The lead agent is the only writer to the task file. Teammate results are tagged:
 
 ---
 
-## 10. Advanced: Ralph Autonomous Loop
+## 11. Advanced: Ralph Autonomous Loop
 
 For fully autonomous multi-step execution, this workflow integrates with the Ralph system. Ralph creates a `prd.json` with user stories from an interview, then loops automatically through implementation.
 
@@ -430,7 +455,7 @@ See `~/ralph-system/` for full documentation.
 
 ---
 
-## 11. Tips and Lessons Learned
+## 12. Tips and Lessons Learned
 
 These are generalized from real retrospective entries accumulated over 60+ tasks.
 
@@ -480,6 +505,17 @@ workflow-starter-kit/
 |   +-- project/                       # Example hooks for .claude/hooks/
 |       |-- require-venv.sh            # Block Python without venv (Python example)
 |       +-- task-require-tests.sh      # Run tests before task completion
+|
+|-- .claude/
+|   +-- skills/
+|       |-- task-manager/
+|       |   +-- SKILL.md                   # Task file lifecycle management
+|       |-- workflow/
+|       |   +-- SKILL.md                   # 6-phase development loop
+|       |-- plan-review/
+|       |   +-- SKILL.md                   # Pre-execution validation checklist
+|       +-- retro/
+|           +-- SKILL.md                   # Retrospective entry format
 |
 +-- settings/
     |-- global-settings.json           # Example ~/.claude/settings.json
