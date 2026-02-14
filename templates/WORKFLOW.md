@@ -1,4 +1,4 @@
-# Complete Claude Code Workflow (v2 -- Agent Teams)
+# Complete Claude Code Workflow (v3 -- Code Review + Agent Teams)
 
 ## Philosophy
 
@@ -9,6 +9,8 @@
 **You are the only one who can close a task.** Claude Code proposes, you approve. Claude sets status to "needs verification" -- never "done." You test, you confirm each Done Criterion, you say "close it out."
 
 **Agent teams are an accelerator, not a replacement.** Use agent teams when work can genuinely be split into independent, parallel pieces across different files. Default to single-agent for sequential or single-file work. The workflow phases don't change -- agent teams slot into Phases 2 and 4 as an optional execution mode.
+
+**Code review is not optional.** Every task that changes code gets reviewed before close-out. Skipping code review leads to disasters. Bugs compound, architectural rot sets in, security holes slip through. The code review phase follows the same plan/explore/review/execute loop as the main workflow. A hook enforces this -- you cannot close a task until review is completed or explicitly marked as not required.
 
 ---
 
@@ -26,6 +28,7 @@ Together you define:
 - **Tests:** What query, command, or test proves it works?
 - **Constraints:** What should Claude NOT do?
 - **Execution mode decision:** Single-agent or agent team? (See "When to Use Agent Teams" below)
+- **Code review scope decision:** Required (default) or not required? Only mark "not required" for documentation-only, config changes, or tasks that don't modify code.
 
 Claude AI gives you a prompt to send to Claude Code. The prompt is framed as outcomes, not instructions:
 
@@ -190,11 +193,105 @@ Only you can mark checkboxes. Claude proposes, you approve.
 
 ---
 
-## Phase 6: Close-out (You Control This)
+## Phase 6: Code Review (Claude AI + Claude Code)
+
+After verification passes, every task that changed code must go through code review before close-out. This phase follows the same plan/explore/review/execute sub-loop as the main workflow.
+
+> **WHY:** Skipping code review leads to disasters. Bugs compound, architectural rot sets in, security holes slip through. "I'll review it later" never happens. This phase makes review a first-class part of the workflow, not an afterthought.
+
+### When Code Review Is Required
+
+- **Required (default):** Any task that modifies source code, tests, infrastructure, or configuration that affects runtime behavior.
+- **Not required:** Documentation-only changes, README updates, comment-only edits, non-code config that doesn't affect behavior. Set `## Code Review: not required` explicitly during Phase 1 planning or at any point with user approval.
+
+### The Code Review Sub-Loop
+
+#### 6a. Plan the Review (Claude AI -- Browser)
+
+Bring the recent commits and changes to Claude AI. Share:
+- The diff or summary of what changed
+- Which files were modified and why
+- Any areas you're uncertain about
+
+Together define the review scope:
+- **Architecture:** Are the structural decisions sound? Any unnecessary coupling?
+- **Edge cases:** What happens with empty inputs, null values, concurrent access?
+- **Error handling:** Are failures handled gracefully? Are errors surfaced clearly?
+- **Security:** Any injection vectors, exposed secrets, missing auth checks?
+- **Performance:** Any N+1 queries, unbounded loops, missing indexes?
+- **Tests:** Are the tests actually testing the right things? Missing coverage?
+
+Claude AI produces a **review prompt** to send to Claude Code. For large changes spanning multiple areas, Claude AI splits the review by agents -- e.g., one reviews the API layer, another reviews the data layer, another reviews tests.
+
+#### 6b. Explore for Review (Claude Code -- CLI)
+
+Send the review prompt to Claude Code. Claude Code:
+- Examines the recent commits and changed files
+- Generates a review plan -- what to check, in what order, what patterns to look for
+- Identifies the specific files and line ranges to review
+
+#### 6c. Refine the Review Plan (Claude AI -- Browser)
+
+Bring the review plan back to Claude AI. Challenge it:
+- Are we checking the right things?
+- Missing any edge cases or areas of concern?
+- Over-focusing on style when substance matters more?
+- Should any areas get deeper scrutiny?
+
+Claude AI refines the plan and sends it back.
+
+#### 6d. Execute the Review (Claude Code -- CLI)
+
+Claude Code executes the review plan. For every finding:
+- Log it in the task file's **Code Review Findings** section immediately
+- Categorize: `bug`, `edge-case`, `security`, `performance`, `architecture`, `style`, `test-gap`
+- Assess severity: `critical`, `major`, `minor`, `nit`
+- Fix issues -- implement the fix, re-run tests
+- Log the fix in the Attempts section as a normal attempt entry
+
+When all findings are addressed:
+1. Set `## Code Review: completed` in the task file
+2. Inform the user: "Code review complete. [N] findings addressed. Ready for close-out."
+
+### Code Review Findings Format
+
+```markdown
+## Code Review Findings:
+- [date]: [severity/category] [file:line] [finding description] → [resolution] (fixed/wontfix/deferred)
+```
+
+Example:
+```markdown
+## Code Review Findings:
+- 2025-02-07: [major/edge-case] src/auth/service.py:285 — No handling for expired refresh tokens; silently returns None → Added explicit expiry check with 401 response (fixed)
+- 2025-02-07: [minor/style] src/auth/middleware.py:42 — Inconsistent error message format vs other middleware → Aligned to standard format (fixed)
+- 2025-02-07: [major/test-gap] tests/test_auth.py — No test for concurrent token refresh race condition → Added test_concurrent_refresh test (fixed)
+- 2025-02-07: [nit/style] src/auth/service.py:300 — Variable name 'x' is unclear → Renamed to 'token_claims' (fixed)
+```
+
+### Code Review with Agent Teams
+
+For large changes that span multiple layers, the code review can also use agent teams:
+- **Teammate 1 -- API Review:** Review all API/service layer changes
+- **Teammate 2 -- Data Review:** Review all database/model changes
+- **Teammate 3 -- Test Review:** Review test quality, coverage gaps
+
+Same rules as Phase 4b: lead owns the task file, teammates report findings via messaging, lead logs everything.
+
+### Hook Enforcement
+
+The `require-review-before-close` hook blocks moving task files from `docs/tasks/open/` to `docs/tasks/closed/` unless the task file contains either:
+- `## Code Review: completed`
+- `## Code Review: not required`
+
+---
+
+## Phase 7: Close-out (You Control This)
 
 Only you can close a task. Once:
 - All Done Criteria are `[x]`
 - You've tested it yourself
+- Code review is completed (or explicitly not required)
 - You're satisfied
 
 You say: `"Close it out"`
@@ -247,6 +344,8 @@ Ask yourself: "Can I draw clear file-ownership lines with zero overlap?"
 **End every session:**
 > "Summarize what changed, test results, and what's left"
 
+The stop hook enforces detailed summaries: you must list every file modified with specifics, provide test results with counts, and describe concrete next steps. Vague summaries like "updated some files, tests pass, nothing left" will be blocked.
+
 This prevents the "unclear outcome" problem where sessions end and you don't know what happened.
 
 **Review retro entries:**
@@ -265,6 +364,7 @@ The session hook automatically injects the last 10 entries from `docs/tasks/RETR
 ## Task: [name]
 ## Status: not started | in progress | blocked | needs verification
 ## Execution Mode: single-agent | agent-team
+## Code Review: required | not required | in progress | completed
 ## Goal: [one sentence -- the outcome, not the approach]
 
 ## Success Criteria:
@@ -296,6 +396,9 @@ The session hook automatically injects the last 10 entries from `docs/tasks/RETR
 
 ## Attempts:
 - [date] [Teammate: role if team mode]: what was tried -> what happened -> result (worked/failed/partial)
+
+## Code Review Findings:
+- [date]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)
 ```
 
 ---
@@ -321,9 +424,10 @@ Same declarative philosophy. Parallel execution. One task file. One source of tr
 
 | Phase | Where | Who Drives | Output | Agent Team Change |
 |-------|-------|-----------|--------|-------------------|
-| 1. Initiation | Claude AI (browser) | You + Claude AI | Success criteria, constraints, execution mode decision | Decide single vs team |
+| 1. Initiation | Claude AI (browser) | You + Claude AI | Success criteria, constraints, execution mode, review scope | Decide single vs team |
 | 2. Exploration | Claude Code (CLI) | Claude | Plan + task file created | Optional: parallel exploration team |
 | 3. Review | Claude AI (browser) | Claude AI | Improved plan, agent/team assignments | File ownership map + team structure |
 | 4. Execution | Claude Code (CLI) | Claude | Code changes, attempts logged | Parallel teammates, lead logs to task file |
 | 5. Verification | Claude Code (CLI) | You | Done criteria checked off | No change -- always sequential |
-| 6. Close-out | Claude Code (CLI) | You | Task moved to closed/ | No change |
+| 6. Code Review | Claude AI + Claude Code | You + Claude | Findings logged, issues fixed | Optional: parallel review team |
+| 7. Close-out | Claude Code (CLI) | You | Task moved to closed/ | No change |

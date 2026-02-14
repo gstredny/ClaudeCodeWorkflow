@@ -26,6 +26,7 @@ TASK FILE TEMPLATE:
 ```
 ## Task: [name]
 ## Status: not started | in progress | blocked | needs verification
+## Code Review: required | not required | in progress | completed
 ## Goal: [one sentence max]
 ## Relevant Files:
 - [only files this task touches, with brief note on what changes]
@@ -38,6 +39,8 @@ TASK FILE TEMPLATE:
 [exactly where work stopped -- be specific enough that a new session can resume without asking questions]
 ## Attempts:
 - [date]: what was tried -> what happened -> result (worked/failed/partial)
+## Code Review Findings:
+- [date]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)
 ```
 
 ---
@@ -131,7 +134,8 @@ Follow the complete workflow in docs/WORKFLOW.md. Key rules:
 - Task files are persistent memory -- read before acting
 - Never set status to "done" -- only "needs verification"
 - Attempts log is append-only, never overwrite
-- End every session with: "Summarize what changed, test results, and what's left"
+- End every session with a detailed summary: every file modified with specifics, test results with counts, concrete next steps
+- Code review is required before close-out for any task that modifies code. Follow the plan/explore/review/execute sub-loop. Set "Code Review: not required" only for documentation-only or non-code tasks.
 - Agent Teams: when task file shows "Execution Mode: agent-team", use delegate mode as lead, teammates report via messaging, lead owns task file exclusively, tag attempts by teammate role
 - [CUSTOMIZE: Add language-specific rules, e.g., "Always activate venv before Python commands"]
 
@@ -140,8 +144,9 @@ Workflow rules are enforced by hooks at two levels:
 
 ### Global hooks (~/.claude/hooks/) -- apply to ALL projects:
 - **SessionStart**: Injects workflow reminders on every new or resumed session
-- **Stop**: Blocks stopping without a close-out summary (what changed, test results, what's left)
+- **Stop**: Blocks stopping without a detailed close-out summary (every file modified, test counts, specific next steps)
 - **PostToolUse/Write|Edit**: Prevents setting task status to "done" and catches attempts log overwrites
+- **PreToolUse/Bash**: Blocks task close-out without retro entry AND without completed code review
 - **TeammateIdle**: Requires agent team teammates to report completion summary before going idle
 
 ### Project hooks (.claude/hooks/) -- [CUSTOMIZE] per project:
