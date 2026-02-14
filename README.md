@@ -128,7 +128,74 @@ The key discipline: every phase produces an artifact. Plans are written down. At
 
 ---
 
-## 4. Task Files -- Persistent Memory
+## 4. Starter Prompts
+
+These are copy-paste prompts for starting Claude AI (browser) sessions. Use them every time you kick off a new phase that starts in the browser.
+
+### Phase 1: Task Planning Prompt
+
+Copy this into a new Claude AI chat when you have a feature or bug to work on:
+
+```
+You are my senior dev planning partner. Your job is to help me define a task before I send it to Claude Code for implementation.
+
+Rules:
+- No code. Planning only.
+- Push for robust, long-term solutions — no band-aids.
+- Challenge my assumptions. Find gaps in my thinking.
+- Be a critic, not a yes-man.
+
+Together we will define:
+1. **Success criteria** — specific, testable outcomes (not vague "works correctly")
+2. **Tests** — what command, query, or test proves it works?
+3. **Constraints** — what should Claude Code NOT do?
+4. **Execution mode** — single-agent or agent-team? (Team only if work spans multiple files with zero-overlap ownership)
+5. **Code review scope** — required (default for any code changes) or not required (docs-only, config-only)
+
+Your output should be a **declarative prompt** I can paste directly into Claude Code. Frame it as outcomes, not step-by-step instructions. Example format:
+
+> "Success criteria: [list]. Tests: [list]. Constraints: [list]. Code Review: [required/not required]. Create a task in docs/tasks/open/ first."
+
+Here's what I want to accomplish:
+[DESCRIBE YOUR FEATURE OR BUG HERE]
+```
+
+### Phase 6: Code Review Planning Prompt
+
+Copy this into a new Claude AI chat after Phase 5 verification passes and you're ready to plan the code review:
+
+```
+You are my code review planning partner. I just finished implementing a feature/fix and it passed verification. Now I need to plan a thorough code review before closing out the task.
+
+Rules:
+- No code. Review planning only.
+- Focus on substance over style — bugs, edge cases, security, and architecture matter more than formatting.
+- Challenge whether the implementation is actually correct, not just whether it passes the tests.
+- If the changes span multiple areas, split the review into parallel agent assignments with clear file ownership.
+
+Here are the changes to review:
+[PASTE YOUR DIFF, COMMIT LOG, OR SUMMARY OF CHANGES HERE]
+
+Together we will define the review scope across these dimensions:
+1. **Architecture** — Are structural decisions sound? Unnecessary coupling? Right abstractions?
+2. **Edge cases** — Empty inputs, null values, concurrent access, boundary conditions?
+3. **Error handling** — Are failures handled gracefully? Are errors surfaced clearly?
+4. **Security** — Injection vectors, exposed secrets, missing auth checks, input validation?
+5. **Performance** — N+1 queries, unbounded loops, missing indexes, memory leaks?
+6. **Test coverage** — Are the tests testing the right things? Missing scenarios? Brittle assertions?
+
+Your output should be a **review prompt** I can paste into Claude Code. For large changes, split by agents — e.g., one reviews the API layer, another reviews tests. Each agent gets specific files, specific things to look for, and a findings format.
+
+Findings format for Claude Code to use:
+- [date]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)
+
+Severity: critical, major, minor, nit
+Categories: bug, edge-case, security, performance, architecture, style, test-gap
+```
+
+---
+
+## 5. Task Files -- Persistent Memory
 
 Claude Code has no memory between sessions. When you start a new conversation, it knows nothing about what happened before. Task files solve this completely.
 
@@ -178,7 +245,7 @@ Session 2 (hours or days later) reads the task file, sees the failed attempt, se
 
 ---
 
-## 5. CLAUDE.md -- Project Instructions
+## 6. CLAUDE.md -- Project Instructions
 
 CLAUDE.md is a file in your project root that Claude Code reads at the start of every session. It is your contract with the AI -- the rules it must follow, the mistakes it must not repeat, and the constraints it must respect.
 
@@ -211,7 +278,7 @@ You will build up rules over time. Every painful mistake becomes a permanent gua
 
 ---
 
-## 6. Hooks -- Automated Enforcement
+## 7. Hooks -- Automated Enforcement
 
 Rules in CLAUDE.md work because Claude reads them. Hooks work even when Claude does not read them. They are shell scripts that fire on specific Claude Code events and can block actions that violate the workflow.
 
@@ -254,7 +321,7 @@ The two project hooks in this starter kit are examples. Replace them with whatev
 
 ---
 
-## 7. Skills -- Workflow Intelligence
+## 8. Skills -- Workflow Intelligence
 
 Skills are markdown files in `.claude/skills/` that give Claude Code specialized domain knowledge for specific workflow activities. While CLAUDE.md defines project rules and constraints, skills teach Claude *how* to perform specific workflow processes -- creating task files, running retrospectives, validating plans, and following the development loop.
 
@@ -279,7 +346,7 @@ Claude Code automatically reads skill files when it needs domain knowledge for a
 
 ---
 
-## 8. Code Review -- Mandatory Before Close-Out
+## 9. Code Review -- Mandatory Before Close-Out
 
 Every task that modifies code must go through a code review before it can be closed out. This is enforced by the `require-review-before-close` hook -- you literally cannot move a task file to `docs/tasks/closed/` without it.
 
@@ -320,7 +387,7 @@ Some tasks genuinely don't need code review: documentation updates, README chang
 
 ---
 
-## 9. RETRO.md -- Learning Across Tasks
+## 10. RETRO.md -- Learning Across Tasks
 
 RETRO.md is an append-only log of lessons learned across all tasks. It lives at `docs/tasks/RETRO.md` in your project.
 
@@ -355,7 +422,7 @@ Good patterns become institutional knowledge that compounds over time.
 
 ---
 
-## 10. Settings Files
+## 11. Settings Files
 
 Claude Code uses two settings files that control hooks, environment variables, and other configuration.
 
@@ -436,7 +503,7 @@ Lives in your project directory. Contains:
 
 ---
 
-## 11. Advanced: Agent Teams
+## 12. Advanced: Agent Teams
 
 Agent teams let multiple Claude Code instances work in parallel on different parts of a task. This is powerful but adds coordination overhead. Use it only when the math works out.
 
@@ -485,7 +552,7 @@ The lead agent is the only writer to the task file. Teammate results are tagged:
 
 ---
 
-## 12. Advanced: Ralph Autonomous Loop
+## 13. Advanced: Ralph Autonomous Loop
 
 For fully autonomous multi-step execution, this workflow integrates with the Ralph system. Ralph creates a `prd.json` with user stories from an interview, then loops automatically through implementation.
 
@@ -513,7 +580,7 @@ See `~/ralph-system/` for full documentation.
 
 ---
 
-## 13. Tips and Lessons Learned
+## 14. Tips and Lessons Learned
 
 These are generalized from real retrospective entries accumulated over 60+ tasks.
 
