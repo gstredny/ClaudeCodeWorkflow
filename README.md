@@ -92,19 +92,19 @@ Most tasks follow a seven-phase cycle. You loop between Claude AI (browser) for 
                          |
                          v
     +------------------------------------+
-    |  Phase 5: VERIFY (You + Claude)    |
-    |  Walk Done Criteria one by one.    |
-    |  You confirm each checkbox.        |
-    +------------------------------------+
-                         |
-                         v
-    +------------------------------------+
-    |  Phase 6: CODE REVIEW              |
+    |  Phase 5: CODE REVIEW              |
     |  (Claude AI + Claude Code)         |
     |  Plan review scope with Claude AI. |
     |  Execute review with Claude Code.  |
     |  Log findings. Fix issues.         |
     |  Skip if "not required."           |
+    +------------------------------------+
+                         |
+                         v
+    +------------------------------------+
+    |  Phase 6: VERIFY (You + Claude)    |
+    |  Walk Done Criteria one by one.    |
+    |  You confirm each checkbox.        |
     +------------------------------------+
                          |
                          v
@@ -119,10 +119,10 @@ Most tasks follow a seven-phase cycle. You loop between Claude AI (browser) for 
 
 **Common variations:**
 - Phase 4 reveals a wrong assumption -> bounce back to Phase 3 for re-planning
-- Phase 5 fails a criterion -> return to Phase 4 for another attempt
-- Phase 6 code review finds issues -> fix them, re-verify if needed
+- Phase 5 code review finds issues -> fix them, return to Phase 4 for another attempt
+- Phase 6 fails a verification criterion -> return to Phase 4 for rework
 - Simple bug fix -> skip Phase 3 and go straight from Phase 2 to Phase 4
-- Documentation-only task -> set "Code Review: not required" and skip Phase 6
+- Documentation-only task -> set "Code Review: not required" and skip Phase 5
 
 The key discipline: every phase produces an artifact. Plans are written down. Attempts are logged. Criteria are checked off. Nothing lives only in your head or in a chat window that will disappear.
 
@@ -160,9 +160,9 @@ Here's what I want to accomplish:
 [DESCRIBE YOUR FEATURE OR BUG HERE]
 ```
 
-### Phase 6: Code Review Planning Prompt
+### Phase 5: Code Review Planning Prompt
 
-Copy this into a new Claude AI chat after Phase 5 verification passes and you're ready to plan the code review:
+Copy this into a new Claude AI chat after Phase 4 execution completes and you're ready to plan the code review:
 
 ```
 You are my code review planning partner. I just finished implementing a feature/fix and it passed verification. Now I need to plan a thorough code review before closing out the task.
@@ -352,7 +352,7 @@ Every task that modifies code must go through a code review before it can be clo
 
 ### Why This Exists
 
-Skipping code review is the number one way bugs compound. "I'll review it later" never happens. By making code review a first-class phase (Phase 6) with its own sub-loop and hook enforcement, it becomes part of the workflow rather than an afterthought.
+Skipping code review is the number one way bugs compound. "I'll review it later" never happens. By making code review a first-class phase (Phase 5) with its own sub-loop and hook enforcement, it becomes part of the workflow rather than an afterthought.
 
 ### The Code Review Sub-Loop
 

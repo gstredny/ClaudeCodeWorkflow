@@ -176,28 +176,13 @@ Example Attempts log entry for team execution:
 
 ---
 
-## Phase 5: Verification (You + Claude Code)
+## Phase 5: Code Review (Claude AI + Claude Code)
 
-When Claude Code believes the fix works (code compiles, tests pass, committed), it:
-1. Sets status to "needs verification" (never "done")
-2. Asks: "This fix appears to be working. Want me to walk through the Done Criteria to close out this task?"
-
-Claude Code goes through each Done Criterion checkbox one by one:
-- "First criterion: [X]. Did you verify this works?"
-- You confirm -- Claude marks `[x]`
-- You reject -- Claude logs it as a new Attempt entry and keeps working
-
-Only you can mark checkboxes. Claude proposes, you approve.
-
-**No change for agent teams.** Verification is always sequential, always you driving. If a rejected criterion requires rework on a specific layer, you decide whether to re-spin a teammate or handle it single-agent.
-
----
-
-## Phase 6: Code Review (Claude AI + Claude Code)
-
-After verification passes, every task that changed code must go through code review before close-out. This phase follows the same plan/explore/review/execute sub-loop as the main workflow.
+After execution completes, every task that changed code must go through code review before verification. This phase follows the same plan/explore/review/execute sub-loop as the main workflow.
 
 > **WHY:** Skipping code review leads to disasters. Bugs compound, architectural rot sets in, security holes slip through. "I'll review it later" never happens. This phase makes review a first-class part of the workflow, not an afterthought.
+
+Code review happens before your verification so that any issues found and fixed during review are included when you do your final walkthrough of the Done Criteria.
 
 ### When Code Review Is Required
 
@@ -206,7 +191,7 @@ After verification passes, every task that changed code must go through code rev
 
 ### The Code Review Sub-Loop
 
-#### 6a. Plan the Review (Claude AI -- Browser)
+#### 5a. Plan the Review (Claude AI -- Browser)
 
 Bring the recent commits and changes to Claude AI. Share:
 - The diff or summary of what changed
@@ -223,14 +208,14 @@ Together define the review scope:
 
 Claude AI produces a **review prompt** to send to Claude Code. For large changes spanning multiple areas, Claude AI splits the review by agents -- e.g., one reviews the API layer, another reviews the data layer, another reviews tests.
 
-#### 6b. Explore for Review (Claude Code -- CLI)
+#### 5b. Explore for Review (Claude Code -- CLI)
 
 Send the review prompt to Claude Code. Claude Code:
 - Examines the recent commits and changed files
 - Generates a review plan -- what to check, in what order, what patterns to look for
 - Identifies the specific files and line ranges to review
 
-#### 6c. Refine the Review Plan (Claude AI -- Browser)
+#### 5c. Refine the Review Plan (Claude AI -- Browser)
 
 Bring the review plan back to Claude AI. Challenge it:
 - Are we checking the right things?
@@ -240,7 +225,7 @@ Bring the review plan back to Claude AI. Challenge it:
 
 Claude AI refines the plan and sends it back.
 
-#### 6d. Execute the Review (Claude Code -- CLI)
+#### 5d. Execute the Review (Claude Code -- CLI)
 
 Claude Code executes the review plan. For every finding:
 - Log it in the task file's **Code Review Findings** section immediately
@@ -283,6 +268,25 @@ Same rules as Phase 4b: lead owns the task file, teammates report findings via m
 The `require-review-before-close` hook blocks moving task files from `docs/tasks/open/` to `docs/tasks/closed/` unless the task file contains either:
 - `## Code Review: completed`
 - `## Code Review: not required`
+
+---
+
+## Phase 6: Verification (You + Claude Code)
+
+After code review completes (or is marked not required), you do the final verification. This is the last gate before close-out -- only you can approve the work.
+
+When Claude Code believes the fix works (code compiles, tests pass, committed, review complete), it:
+1. Sets status to "needs verification" (never "done")
+2. Asks: "This fix appears to be working. Want me to walk through the Done Criteria to close out this task?"
+
+Claude Code goes through each Done Criterion checkbox one by one:
+- "First criterion: [X]. Did you verify this works?"
+- You confirm -- Claude marks `[x]`
+- You reject -- Claude logs it as a new Attempt entry and keeps working
+
+Only you can mark checkboxes. Claude proposes, you approve.
+
+**No change for agent teams.** Verification is always sequential, always you driving. If a rejected criterion requires rework on a specific layer, you decide whether to re-spin a teammate or handle it single-agent.
 
 ---
 
@@ -428,6 +432,6 @@ Same declarative philosophy. Parallel execution. One task file. One source of tr
 | 2. Exploration | Claude Code (CLI) | Claude | Plan + task file created | Optional: parallel exploration team |
 | 3. Review | Claude AI (browser) | Claude AI | Improved plan, agent/team assignments | File ownership map + team structure |
 | 4. Execution | Claude Code (CLI) | Claude | Code changes, attempts logged | Parallel teammates, lead logs to task file |
-| 5. Verification | Claude Code (CLI) | You | Done criteria checked off | No change -- always sequential |
-| 6. Code Review | Claude AI + Claude Code | You + Claude | Findings logged, issues fixed | Optional: parallel review team |
+| 5. Code Review | Claude AI + Claude Code | You + Claude | Findings logged, issues fixed | Optional: parallel review team |
+| 6. Verification | Claude Code (CLI) | You | Done criteria checked off | No change -- always sequential |
 | 7. Close-out | Claude Code (CLI) | You | Task moved to closed/ | No change |
