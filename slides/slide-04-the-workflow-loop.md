@@ -13,11 +13,11 @@ Phase 3  REVIEW ............ Claude AI (browser)
 Phase 4  EXECUTE ........... Claude Code (CLI)
    |     Implement. Log every attempt to task file
    v
-Phase 5  VERIFY ............ You + Claude Code
-   |     Walk Done Criteria one by one
-   v
-Phase 6  CODE REVIEW ....... Claude AI + Claude Code
+Phase 5  CODE REVIEW ....... Claude AI + Claude Code
    |     Plan review, execute review, log findings, fix issues
+   v
+Phase 6  VERIFY ............ You + Claude Code
+   |     Walk Done Criteria one by one
    v
 Phase 7  CLOSE-OUT ......... You
          Approve. Retro entry. Move to closed/
@@ -31,4 +31,4 @@ Phase 7  CLOSE-OUT ......... You
 ---
 
 **Speaker notes:**
-Most tasks follow all 7 phases. Simple bugs might skip Phase 3. Failed verification bounces back to Phase 4. Documentation-only tasks skip Phase 6 (set "Code Review: not required"). Code review follows the same plan/explore/review/execute sub-loop. The key discipline: every phase produces an artifact — plans are written, attempts are logged, findings are recorded, criteria are checked off. Nothing lives only in your head.
+Most tasks follow all 7 phases. Simple bugs might skip Phase 3. Code review findings bounce back to Phase 4 for fixes. Failed verification bounces back to Phase 4 for rework. Documentation-only tasks skip Phase 5 (set "Code Review: not required"). Code review follows the same plan/explore/review/execute sub-loop. The key discipline: every phase produces an artifact — plans are written, attempts are logged, findings are recorded, criteria are checked off. Nothing lives only in your head.

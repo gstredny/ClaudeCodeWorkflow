@@ -22,8 +22,8 @@ A 7-phase loop for taking features and bugs from idea to verified, reviewed comp
 | 2. Explore | Claude Code | Claude | Task file created, codebase explored, plan generated |
 | 3. Review | Claude.ai | Claude.ai | Plan challenged, improved, agents assigned if team mode |
 | 4. Execute | Claude Code | Claude | Code changes implemented, attempts logged after every change |
-| 5. Verify | Claude Code + User | User | Done Criteria walked through one by one |
-| 6. Code Review | Claude.ai + Claude Code | User + Claude | Review planned, executed, findings logged and addressed |
+| 5. Code Review | Claude.ai + Claude Code | User + Claude | Review planned, executed, findings logged and addressed |
+| 6. Verify | Claude Code + User | User | Done Criteria walked through one by one |
 | 7. Close-out | Claude Code | User | Retro entry appended, task moved to closed/ |
 
 **Phase 1 — Plan:** Come to Claude.ai with a feature or bug. Together define success criteria (specific, testable), tests that prove it works, constraints (what NOT to do), and whether to use single-agent or agent-team execution.
@@ -34,9 +34,7 @@ A 7-phase loop for taking features and bugs from idea to verified, reviewed comp
 
 **Phase 4 — Execute:** Implement the plan. After EVERY code change attempt, append to the task file's Attempts log immediately (not batched). Attempts log is append-only — never overwrite or delete entries.
 
-**Phase 5 — Verify:** When code compiles, tests pass, and changes are committed, set status to "needs verification" and walk through each Done Criterion with the user. User confirms or rejects each one.
-
-**Phase 6 — Code Review:** After verification passes, plan and execute a code review. This is a sub-loop:
+**Phase 5 — Code Review:** After execution completes, plan and execute a code review. This is a sub-loop:
 
 1. **Plan the review (Claude.ai):** Bring the recent commits/changes to Claude.ai. Together define what to review — architecture decisions, edge cases, error handling, security, performance. Claude.ai produces a review prompt, splitting by agents if the changes span multiple areas.
 2. **Explore for review (Claude Code):** Send the review prompt to Claude Code. It examines the changes and generates a review plan — what to check, in what order, what to look for.
@@ -44,6 +42,8 @@ A 7-phase loop for taking features and bugs from idea to verified, reviewed comp
 4. **Execute the review (Claude Code):** Run the review. Log every finding in the task file's "Code Review Findings" section. Fix issues found. Re-run tests after fixes.
 
 Set `## Code Review: completed` when all findings are addressed. For tasks that genuinely don't need review (documentation-only, config changes), set `## Code Review: not required` during Phase 1 planning.
+
+**Phase 6 — Verify:** After code review completes (or is marked not required), set status to "needs verification" and walk through each Done Criterion with the user. User confirms or rejects each one. Only the user can mark checkboxes and approve completion. This is the final gate before close-out.
 
 **Phase 7 — Close-out:** User says "close it out." Append a retro entry (use the retro skill for format), then move the task file from `docs/tasks/open/` to `docs/tasks/closed/`.
 
@@ -87,7 +87,7 @@ Quick decision check: *"Can I draw file-ownership lines with zero overlap?"* Yes
 | "Fix this bug" / "Add this feature" | Check `docs/tasks/open/` for existing task → create task file if none → explore → plan |
 | "Check tasks" / "What's open?" | List all files in `docs/tasks/open/` with Status and Goal |
 | "Resume [task name]" | Read the task file, pick up from "Left Off At", never retry failed Attempts |
-| "Start code review" | Begin Phase 6 — plan the review with Claude.ai, execute with Claude Code |
+| "Start code review" | Begin Phase 5 — plan the review with Claude.ai, execute with Claude Code |
 | "Code review not needed" | Set `## Code Review: not required` in the task file |
 | "Close it out" | Check code review status → append retro entry (see retro skill) → move task to `docs/tasks/closed/` |
 | "Use a team for this" | Verify 4 agent-team criteria, set up team structure with file ownership map |
