@@ -49,6 +49,7 @@ if ask_yn "Install global hooks?"; then
     "stop-require-summary.sh"
     "guard-task-status.sh"
     "require-retro-before-close.sh"
+    "require-review-before-close.sh"
     "teammate-require-summary.sh"
   )
 

@@ -7,6 +7,7 @@ Copy this template to `docs/tasks/open/[descriptive-name].md` when starting a ne
 ## Task: [name]
 ## Status: not started | in progress | blocked | needs verification
 ## Execution Mode: single-agent | agent-team
+## Code Review: required | not required | in progress | completed
 ## Goal: [one sentence — the outcome, not the approach]
 
 ## Relevant Files:
@@ -34,6 +35,9 @@ Copy this template to `docs/tasks/open/[descriptive-name].md` when starting a ne
 
 ## Attempts:
 - [date] [Teammate: role if team mode]: what was tried → what happened → result (worked/failed/partial)
+
+## Code Review Findings:
+- [date]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)
 
 ---
 
@@ -67,3 +71,19 @@ For agent teams, tag by role: `- [YYYY-MM-DD] [Teammate: API]: ...`
 
 ### Left Off At
 Must be specific enough for a cold resume. Bad: "Working on it." Good: "Implemented the query change in service.py:312. Need to update test_service.py to match new return schema. The test currently expects 3 columns but the query now returns 5."
+
+### Code Review
+- **required** — Default for all tasks that modify code. Code review must be completed before close-out.
+- **not required** — Explicitly opted out (documentation-only, config changes, non-code tasks). Set during Phase 1 planning or with user approval.
+- **in progress** — Code review sub-loop is actively being worked on.
+- **completed** — All review findings addressed. Ready for close-out.
+
+A hook enforces this: task files cannot be moved to `docs/tasks/closed/` unless Code Review is "completed" or "not required."
+
+### Code Review Findings (Append-Only)
+Log every code review finding immediately when discovered. Never delete or overwrite entries.
+
+Format: `- [YYYY-MM-DD]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)`
+
+Severity: `critical`, `major`, `minor`, `nit`
+Categories: `bug`, `edge-case`, `security`, `performance`, `architecture`, `style`, `test-gap`

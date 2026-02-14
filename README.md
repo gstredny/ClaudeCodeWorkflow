@@ -56,7 +56,7 @@ Claude Code will create the file from the template, explore the codebase, and ge
 
 ## 3. The Full Workflow Loop
 
-Most tasks follow a six-phase cycle. You loop between Claude AI (browser) for thinking and Claude Code (CLI) for doing.
+Most tasks follow a seven-phase cycle. You loop between Claude AI (browser) for thinking and Claude Code (CLI) for doing.
 
 ```
                         YOU
@@ -99,18 +99,30 @@ Most tasks follow a six-phase cycle. You loop between Claude AI (browser) for th
                          |
                          v
     +------------------------------------+
-    |  Phase 6: CLOSE-OUT (You)          |
+    |  Phase 6: CODE REVIEW              |
+    |  (Claude AI + Claude Code)         |
+    |  Plan review scope with Claude AI. |
+    |  Execute review with Claude Code.  |
+    |  Log findings. Fix issues.         |
+    |  Skip if "not required."           |
+    +------------------------------------+
+                         |
+                         v
+    +------------------------------------+
+    |  Phase 7: CLOSE-OUT (You)          |
     |  Approve task. Add retro entry.    |
     |  Move task to closed/.             |
     +------------------------------------+
 ```
 
-**Typical flow:** Phase 1 -> 2 -> 3 -> 4 -> 5 -> 6.
+**Typical flow:** Phase 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7.
 
 **Common variations:**
 - Phase 4 reveals a wrong assumption -> bounce back to Phase 3 for re-planning
 - Phase 5 fails a criterion -> return to Phase 4 for another attempt
+- Phase 6 code review finds issues -> fix them, re-verify if needed
 - Simple bug fix -> skip Phase 3 and go straight from Phase 2 to Phase 4
+- Documentation-only task -> set "Code Review: not required" and skip Phase 6
 
 The key discipline: every phase produces an artifact. Plans are written down. Attempts are logged. Criteria are checked off. Nothing lives only in your head or in a chat window that will disappear.
 
@@ -125,6 +137,7 @@ Claude Code has no memory between sessions. When you start a new conversation, i
 ```markdown
 ## Task: [descriptive name]
 ## Status: not started | in progress | blocked | needs verification
+## Code Review: required | not required | in progress | completed
 ## Goal: [one sentence -- the outcome, not the approach]
 
 ## Relevant Files:
@@ -142,6 +155,9 @@ Claude Code has no memory between sessions. When you start a new conversation, i
 
 ## Attempts:
 - [date]: what was tried -> what happened -> result (worked/failed/partial)
+
+## Code Review Findings:
+- [date]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)
 ```
 
 ### Rules That Make It Work
@@ -204,9 +220,10 @@ Rules in CLAUDE.md work because Claude reads them. Hooks work even when Claude d
 | Hook | Trigger | What It Does | Location |
 |------|---------|--------------|----------|
 | `session-start` | Session starts or resumes | Injects workflow rules reminder and recent retro entries | Global |
-| `stop-require-summary` | Agent stops | Blocks stopping without a close-out summary (what changed, test results, what is left) | Global |
+| `stop-require-summary` | Agent stops | Blocks stopping without a detailed summary (every file modified, test counts, specific next steps) | Global |
 | `guard-task-status` | Write/Edit to task files | Prevents setting status to "done" or "complete" -- only "needs verification" allowed | Global |
 | `require-retro-before-close` | `mv` command (open -> closed) | Requires a retro entry in RETRO.md before allowing task file to move to closed/ | Global |
+| `require-review-before-close` | `mv` command (open -> closed) | Requires code review to be "completed" or "not required" before allowing task close | Global |
 | `teammate-require-summary` | Teammate goes idle | Requires completion summary (files changed, test results) from agent team teammates | Global |
 | `require-venv` | Bash command | Blocks Python/pip/pytest commands that do not activate virtualenv first | Project |
 | `task-require-tests` | Task completion | Runs the test suite before allowing a task to be marked complete -- fails block completion | Project |
@@ -245,7 +262,7 @@ Skills are markdown files in `.claude/skills/` that give Claude Code specialized
 
 | Skill | Location | Purpose |
 |-------|----------|---------|
-| **workflow** | `.claude/skills/workflow/SKILL.md` | The 6-phase development loop from plan to close-out |
+| **workflow** | `.claude/skills/workflow/SKILL.md` | The 7-phase development loop from plan to close-out |
 | **task-manager** | `.claude/skills/task-manager/SKILL.md` | Task file lifecycle: create, update, resume, complete |
 | **plan-review** | `.claude/skills/plan-review/SKILL.md` | 6-point pre-execution validation checklist |
 | **retro** | `.claude/skills/retro/SKILL.md` | Retrospective entry format and quality guidelines |
@@ -262,7 +279,48 @@ Claude Code automatically reads skill files when it needs domain knowledge for a
 
 ---
 
-## 8. RETRO.md -- Learning Across Tasks
+## 8. Code Review -- Mandatory Before Close-Out
+
+Every task that modifies code must go through a code review before it can be closed out. This is enforced by the `require-review-before-close` hook -- you literally cannot move a task file to `docs/tasks/closed/` without it.
+
+### Why This Exists
+
+Skipping code review is the number one way bugs compound. "I'll review it later" never happens. By making code review a first-class phase (Phase 6) with its own sub-loop and hook enforcement, it becomes part of the workflow rather than an afterthought.
+
+### The Code Review Sub-Loop
+
+Code review follows the same plan/explore/review/execute pattern as the main workflow:
+
+1. **Plan the review (Claude AI browser):** Bring the recent commits and changes to Claude AI. Together define review scope -- architecture, edge cases, error handling, security, performance, test coverage. Claude AI produces a review prompt, splitting by agents if the changes are large.
+2. **Explore for review (Claude Code CLI):** Send the review prompt to Claude Code. It examines the changes and generates a review plan.
+3. **Refine the review plan (Claude AI browser):** Bring the review plan back to Claude AI. Challenge it -- missing edge cases? Over-focusing on style vs substance?
+4. **Execute the review (Claude Code CLI):** Run the review. Log every finding in the task file's Code Review Findings section. Fix issues found. Re-run tests.
+
+### Task File Fields
+
+Two new fields in the task file:
+
+```markdown
+## Code Review: required | not required | in progress | completed
+```
+
+- **required** (default): Code review must happen before close-out
+- **not required**: Explicitly opted out -- only for documentation-only or non-code tasks
+- **in progress**: Code review sub-loop is active
+- **completed**: All findings addressed, ready for close-out
+
+```markdown
+## Code Review Findings:
+- [date]: [severity/category] [file:line] [finding] → [resolution] (fixed/wontfix/deferred)
+```
+
+### Opting Out
+
+Some tasks genuinely don't need code review: documentation updates, README changes, config tweaks that don't affect runtime behavior. Set `## Code Review: not required` during Phase 1 planning or at any point with user approval. The hook accepts both "completed" and "not required" as valid states for close-out.
+
+---
+
+## 9. RETRO.md -- Learning Across Tasks
 
 RETRO.md is an append-only log of lessons learned across all tasks. It lives at `docs/tasks/RETRO.md` in your project.
 
@@ -297,7 +355,7 @@ Good patterns become institutional knowledge that compounds over time.
 
 ---
 
-## 9. Settings Files
+## 10. Settings Files
 
 Claude Code uses two settings files that control hooks, environment variables, and other configuration.
 
@@ -378,7 +436,7 @@ Lives in your project directory. Contains:
 
 ---
 
-## 10. Advanced: Agent Teams
+## 11. Advanced: Agent Teams
 
 Agent teams let multiple Claude Code instances work in parallel on different parts of a task. This is powerful but adds coordination overhead. Use it only when the math works out.
 
@@ -427,7 +485,7 @@ The lead agent is the only writer to the task file. Teammate results are tagged:
 
 ---
 
-## 11. Advanced: Ralph Autonomous Loop
+## 12. Advanced: Ralph Autonomous Loop
 
 For fully autonomous multi-step execution, this workflow integrates with the Ralph system. Ralph creates a `prd.json` with user stories from an interview, then loops automatically through implementation.
 
@@ -455,7 +513,7 @@ See `~/ralph-system/` for full documentation.
 
 ---
 
-## 12. Tips and Lessons Learned
+## 13. Tips and Lessons Learned
 
 These are generalized from real retrospective entries accumulated over 60+ tasks.
 
@@ -500,6 +558,7 @@ workflow-starter-kit/
 |   |   |-- stop-require-summary.sh    # Block stop without close-out summary
 |   |   |-- guard-task-status.sh       # Prevent status = "done"
 |   |   |-- require-retro-before-close.sh  # Require retro before task close
+|   |   |-- require-review-before-close.sh # Require code review before task close
 |   |   +-- teammate-require-summary.sh    # Require teammate completion summary
 |   |
 |   +-- project/                       # Example hooks for .claude/hooks/
@@ -511,7 +570,7 @@ workflow-starter-kit/
 |       |-- task-manager/
 |       |   +-- SKILL.md                   # Task file lifecycle management
 |       |-- workflow/
-|       |   +-- SKILL.md                   # 6-phase development loop
+|       |   +-- SKILL.md                   # 7-phase development loop
 |       |-- plan-review/
 |       |   +-- SKILL.md                   # Pre-execution validation checklist
 |       +-- retro/
