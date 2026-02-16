@@ -14,6 +14,15 @@
 - **APPEND-ONLY ledger:** Can overwrite Status & "Left Off At" only. NEVER delete/overwrite Attempts, Context, or Done Criteria.
 - Before session ends -> update Attempts entry (date, what tried, result), update "Left Off At" with specific resumption point.
 
+**MID-SESSION CHANGES (when task file updates are required):**
+- **Scope changes** (approach pivot, architecture decision) -> update Context section immediately
+- **Criteria changes** (new requirements, updated done criteria) -> update Done Criteria immediately
+- **Failed approaches** -> append to Attempts immediately (date, what tried, result)
+- **Before session ends** -> declare task file status in summary:
+  - If updated: "Task file updated: docs/tasks/open/[filename].md"
+  - If unchanged: "Task file unchanged -- no scope/criteria changes"
+- The stop hook enforces the declaration (reminder); this rule defines when updates are required (enforcement)
+
 **WHEN FIX WORKS:**
 - Set status to "needs verification" (NEVER "done").
 - **NEVER move to `docs/tasks/closed/`** - task stays in `open/` until user explicitly approves.

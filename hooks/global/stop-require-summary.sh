@@ -19,7 +19,10 @@ if [ -f "$TRANSCRIPT_PATH" ]; then
   # Check 3: What's left / next steps
   HAS_LEFT=$(echo "$RECENT" | grep -icE "(what's left|remaining|next steps|left to do|todo|still need|left off|nothing.*(left|remain))" || true)
 
-  if [ "$HAS_FILE_DETAIL" -gt 0 ] && [ "$HAS_TEST_COUNTS" -gt 0 ] && [ "$HAS_LEFT" -gt 0 ]; then
+  # Check 4: Task file status declaration (unconditional)
+  HAS_TASK_STATUS=$(echo "$RECENT" | grep -icE "(task file (updated|unchanged)|task file.*docs/tasks/open/.*\.md|no scope.*change|no criteria.*change)" || true)
+
+  if [ "$HAS_FILE_DETAIL" -gt 0 ] && [ "$HAS_TEST_COUNTS" -gt 0 ] && [ "$HAS_LEFT" -gt 0 ] && [ "$HAS_TASK_STATUS" -gt 0 ]; then
     exit 0
   fi
 
@@ -34,9 +37,12 @@ if [ -f "$TRANSCRIPT_PATH" ]; then
   if [ "$HAS_LEFT" -eq 0 ]; then
     MISSING="${MISSING}\n- MISSING: What's left to do / next steps."
   fi
+  if [ "$HAS_TASK_STATUS" -eq 0 ]; then
+    MISSING="${MISSING}\n- MISSING: Task file status. State whether docs/tasks/open/ task file was updated or unchanged."
+  fi
 fi
 
 jq -n --arg missing "$MISSING" '{
   "decision": "block",
-  "reason": ("WORKFLOW RULE: Your summary is not detailed enough." + $missing + "\n\nProvide a detailed summary with ALL three sections:\n\n1. What changed — list EVERY file modified with what was changed in each:\n   Example: \"Modified src/auth/service.py — replaced JWT validation with token\n   introspection. Updated tests/test_auth.py — added mock for introspection endpoint.\"\n\n2. Test results — specific counts, not just \"tests pass\":\n   Example: \"pytest tests/test_auth.py: 12/12 passed. Full suite: 156 passed, 0 failed.\"\n\n3. What'\''s left — specific next steps:\n   Example: \"Still need to update API docs for the new token flow. Integration test\n   with staging auth server not yet run.\"\n\nProvide this detailed summary now, then you can stop.")
+  "reason": ("WORKFLOW RULE: Your summary is not detailed enough." + $missing + "\n\nProvide a detailed summary with ALL four sections:\n\n1. What changed — list EVERY file modified with what was changed in each:\n   Example: \"Modified src/auth/service.py — replaced JWT validation with token\n   introspection. Updated tests/test_auth.py — added mock for introspection endpoint.\"\n\n2. Test results — specific counts, not just \"tests pass\":\n   Example: \"pytest tests/test_auth.py: 12/12 passed. Full suite: 156 passed, 0 failed.\"\n\n3. What'\''s left — specific next steps:\n   Example: \"Still need to update API docs for the new token flow. Integration test\n   with staging auth server not yet run.\"\n\n4. Task file status — either:\n   Example: \"Task file updated: docs/tasks/open/auth-refactor.md\" OR\n   \"Task file unchanged — no scope/criteria changes\"\n\nProvide this detailed summary now, then you can stop.")
 }'

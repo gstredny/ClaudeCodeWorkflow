@@ -350,6 +350,25 @@ Ask yourself: "Can I draw clear file-ownership lines with zero overlap?"
 
 The stop hook enforces detailed summaries: you must list every file modified with specifics, provide test results with counts, and describe concrete next steps. Vague summaries like "updated some files, tests pass, nothing left" will be blocked.
 
+**Task file status declaration:**
+At session end, your summary must declare task file status:
+- "Task file updated: docs/tasks/open/[filename].md" OR
+- "Task file unchanged -- no scope/criteria changes"
+
+**When updates are required:**
+- **Scope changes** (approach pivot, architecture decision) -> update Context section
+- **Criteria changes** (new requirements, updated done criteria) -> update Done Criteria
+- **Failed approaches** -> append to Attempts (date, what tried, result)
+
+**Examples:**
+- "Changed from REST to GraphQL" -> update Context + declare: "Task file updated: docs/tasks/open/api-refactor.md"
+- "Tried Redis, auth failed" -> append to Attempts + declare: "Task file updated: docs/tasks/open/caching.md"
+- "Only minor code edits, no scope change" -> declare: "Task file unchanged -- no scope/criteria changes"
+
+**Hook vs Rule:**
+- The stop hook enforces the **declaration** (reminds you to state what happened)
+- CLAUDE.md defines **when updates are required** (what constitutes a significant change)
+
 This prevents the "unclear outcome" problem where sessions end and you don't know what happened.
 
 **Review retro entries:**
