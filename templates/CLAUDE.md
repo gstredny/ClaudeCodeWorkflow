@@ -95,6 +95,14 @@ TASK FILE TEMPLATE:
 - On ANY failed verification -> STOP and reassess
 - Never continue a plan hitting resistance
 
+### 6. IMPLEMENT MEANS EXECUTE
+> **WHY:** Claude spent entire sessions writing plans for 4-line code changes, producing zero edits.
+
+- "implement", "apply", "make these changes", or specific code edits -> **execute immediately**, no plan mode
+- "explore", "investigate", "plan", "design", or "figure out" -> plan first, then propose
+- Ambiguous -> ask: "Should I implement this now or explore first?"
+- Do not write a plan document when the user has already described the exact changes to make
+
 ### [CUSTOMIZE] Add Your Project-Specific Rules Below
 
 <!--
@@ -105,7 +113,7 @@ Add rules specific to your project. Each rule should have:
 
 Example format:
 
-### 6. [RULE NAME]
+### 7. [RULE NAME]
 > **WHY:** [What happened when this was violated -- concrete story]
 
 - [Specific instruction]
@@ -149,10 +157,19 @@ Follow the complete workflow in docs/WORKFLOW.md. Key rules:
 - Task files are persistent memory -- read before acting
 - Never set status to "done" -- only "needs verification"
 - Attempts log is append-only, never overwrite
-- End every session with a detailed summary: every file modified with specifics, test results with counts, concrete next steps
+- End every session with the `/stop` skill summary (4 required sections below)
 - Code review is required before close-out for any task that modifies code. Follow the plan/explore/review/execute sub-loop. Set "Code Review: not required" only for documentation-only or non-code tasks.
 - Agent Teams: when task file shows "Execution Mode: agent-team", use delegate mode as lead, teammates report via messaging, lead owns task file exclusively, tag attempts by teammate role
 - [CUSTOMIZE: Add language-specific rules, e.g., "Always activate venv before Python commands"]
+
+### Session-End Summary Format (enforced by stop hook)
+Every session MUST end with these 4 sections. The stop hook blocks exit until all pass:
+1. **What changed** -- list every file modified with extensions (e.g., `executor.py`, `SKILL.md`)
+2. **Test results** -- include numeric counts (e.g., "560 passed, 0 failed"), not just "tests pass"
+3. **What's left** -- use phrasing like "what's left", "next steps", or "nothing remaining"
+4. **Task file status** -- "Task file updated: docs/tasks/open/[name].md" or "Task file unchanged"
+
+Never provide a vague or abbreviated summary. The stop hook WILL reject it. Use `/stop` to generate a compliant summary.
 
 ## Hooks (Automated Enforcement)
 Workflow rules are enforced by hooks at two levels:

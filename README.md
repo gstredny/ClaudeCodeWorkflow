@@ -356,6 +356,7 @@ Skills are markdown files in `.claude/skills/` that give Claude Code specialized
 | **task-manager** | `.claude/skills/task-manager/SKILL.md` | Task file lifecycle: create, update, resume, complete |
 | **plan-review** | `.claude/skills/plan-review/SKILL.md` | 6-point pre-execution validation checklist |
 | **retro** | `.claude/skills/retro/SKILL.md` | Retrospective entry format and quality guidelines |
+| **stop** | `.claude/skills/stop/SKILL.md` | Session-end summary that passes the stop hook on the first attempt |
 
 ### How Skills Work
 
@@ -719,8 +720,10 @@ workflow-starter-kit/
 |       |   +-- SKILL.md                   # 7-phase development loop
 |       |-- plan-review/
 |       |   +-- SKILL.md                   # Pre-execution validation checklist
-|       +-- retro/
-|           +-- SKILL.md                   # Retrospective entry format
+|       |-- retro/
+|       |   +-- SKILL.md                   # Retrospective entry format
+|       +-- stop/
+|           +-- SKILL.md                   # Session-end summary generator
 |
 +-- settings/
     |-- global-settings.json           # Example ~/.claude/settings.json
