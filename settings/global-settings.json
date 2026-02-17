@@ -54,6 +54,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash ~/.claude/hooks/require-done-criteria-before-close.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "bash ~/.claude/hooks/require-retro-before-close.sh",
             "timeout": 5
           },

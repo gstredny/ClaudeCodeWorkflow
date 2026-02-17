@@ -253,6 +253,8 @@ Claude Code has no memory between sessions. When you start a new conversation, i
 
 **Status is never "done."** Claude Code sets status to "needs verification" when it believes the work is complete. Only you can close a task, after walking through every Done Criterion. This prevents premature declarations of victory.
 
+**Done Criteria are hook-enforced.** The `require-done-criteria-before-close` hook blocks any attempt to move a task file from `open/` to `closed/` if unchecked `- [ ]` items remain. Claude cannot close a task until every criterion is marked `[x]` — and only you can mark them.
+
 **Attempts log is append-only.** Every attempt gets logged immediately after it is tried -- not batched at session end. Never delete or overwrite previous entries. If Claude tried three things in one session, there are three separate dated entries. This creates a complete history that prevents retrying failed approaches.
 
 **"Left Off At" must be specific enough to resume cold.** Not "working on the bug" but "Modified `src/services/auth.py` line 312, test_login passes but test_session fails on assertion at line 45 -- need to check if the token response includes the expected `refresh_token` field." A new session should be able to resume without asking any questions.
@@ -309,8 +311,9 @@ Rules in CLAUDE.md work because Claude reads them. Hooks work even when Claude d
 | Hook | Trigger | What It Does | Location |
 |------|---------|--------------|----------|
 | `session-start` | Session starts or resumes | Injects workflow rules reminder and recent retro entries | Global |
-| `stop-require-summary` | Agent stops | Blocks stopping without a detailed summary (every file modified, test counts, specific next steps) | Global |
-| `guard-task-status` | Write/Edit to task files | Prevents setting status to "done" or "complete" -- only "needs verification" allowed | Global |
+| `stop-require-summary` | Agent stops | Blocks stopping without a 4-part close-out summary (what changed, test results, what is left, task file status declaration) | Global |
+| `guard-task-status` | After Write/Edit to task files | Prevents setting status to "done" or "complete" -- only "needs verification" allowed | Global |
+| `require-done-criteria-before-close` | `mv` command (open -> closed) | Blocks task close-out unless ALL Done Criteria checkboxes are `[x]` | Global |
 | `require-retro-before-close` | `mv` command (open -> closed) | Requires a retro entry in RETRO.md before allowing task file to move to closed/ | Global |
 | `require-review-before-close` | `mv` command (open -> closed) | Requires code review to be "completed" or "not required" before allowing task close | Global |
 | `teammate-require-summary` | Teammate goes idle | Requires completion summary (files changed, test results) from agent team teammates | Global |
@@ -451,7 +454,7 @@ Claude Code uses two settings files that control hooks, environment variables, a
 ### Global Settings (`~/.claude/settings.json`)
 
 Applies to all projects. Contains:
-- Hook registrations for global hooks (session-start, stop-require-summary, guard-task-status, require-retro-before-close, teammate-require-summary)
+- Hook registrations for global hooks (session-start, stop-require-summary, guard-task-status, require-done-criteria-before-close, require-retro-before-close, teammate-require-summary)
 - Environment variables (e.g., enabling agent teams)
 - Login and authentication preferences
 
@@ -467,7 +470,69 @@ Applies to all projects. Contains:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/session-start.sh"
+            "command": "bash ~/.claude/hooks/session-start.sh",
+            "statusMessage": "Loading workflow rules..."
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/session-start.sh",
+            "statusMessage": "Loading workflow rules..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/stop-require-summary.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/guard-task-status.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/require-done-criteria-before-close.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/require-retro-before-close.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/teammate-require-summary.sh",
+            "timeout": 10
           }
         ]
       }
@@ -646,6 +711,7 @@ workflow-starter-kit/
 |   |   |-- session-start.sh           # Inject workflow rules + retro entries
 |   |   |-- stop-require-summary.sh    # Block stop without close-out summary
 |   |   |-- guard-task-status.sh       # Prevent status = "done"
+|   |   |-- require-done-criteria-before-close.sh  # Block close with unchecked criteria
 |   |   |-- require-retro-before-close.sh  # Require retro before task close
 |   |   |-- require-review-before-close.sh # Require code review before task close
 |   |   +-- teammate-require-summary.sh    # Require teammate completion summary
