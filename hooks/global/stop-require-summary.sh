@@ -8,7 +8,7 @@ if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
 fi
 
 if [ -f "$TRANSCRIPT_PATH" ]; then
-  RECENT=$(tail -c 5000 "$TRANSCRIPT_PATH")
+  RECENT=$(tail -c 15000 "$TRANSCRIPT_PATH")
 
   # Check 1: File-level detail in what changed — must mention actual file paths (extensions)
   HAS_FILE_DETAIL=$(echo "$RECENT" | grep -icE '\.(py|js|ts|jsx|tsx|go|rs|md|sh|json|yaml|yml|toml|css|html|vue|rb|java|kt|swift|c|cpp|h|hpp|sql|tf|hcl)\b' || true)

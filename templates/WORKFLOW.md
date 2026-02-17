@@ -265,7 +265,7 @@ Same rules as Phase 4b: lead owns the task file, teammates report findings via m
 
 ### Hook Enforcement
 
-The `require-review-before-close` hook blocks moving task files from `docs/tasks/open/` to `docs/tasks/closed/` unless the task file contains either:
+The `close-out-preflight` hook blocks moving task files from `docs/tasks/open/` to `docs/tasks/closed/` unless the task file contains either:
 - `## Code Review: completed`
 - `## Code Review: not required`
 

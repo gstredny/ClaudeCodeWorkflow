@@ -12,13 +12,6 @@ elif [ "$TOOL_NAME" = "Edit" ]; then
 fi
 
 if echo "$FILE_PATH" | grep -q 'docs/tasks/'; then
-  if echo "$CONTENT" | grep -iqE '## Status:\s*(done|complete|completed|closed)'; then
-    jq -n '{
-      "decision": "block",
-      "reason": "WORKFLOW RULE: You cannot set Status to done/complete/closed. Only the user can close tasks. Set Status to \"needs verification\" instead, then walk through Done Criteria with the user."
-    }'
-    exit 0
-  fi
   if [ "$TOOL_NAME" = "Write" ]; then
     if echo "$FILE_PATH" | grep -q 'docs/tasks/open/'; then
       ATTEMPT_COUNT=$(echo "$CONTENT" | grep -c '^\- \[' || true)

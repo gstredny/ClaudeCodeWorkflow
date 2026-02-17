@@ -27,4 +27,4 @@
 ---
 
 **Speaker notes:**
-The retro log is what makes this system improve over time. Without it, lesson learned in Task 5 are forgotten by Task 20. The session-start hook automatically injects recent entries, so Claude learns from past mistakes without you having to remind it. The require-retro-before-close hook enforces that every task produces a retro entry.
+The retro log is what makes this system improve over time. Without it, lesson learned in Task 5 are forgotten by Task 20. The session-start hook automatically injects recent entries, so Claude learns from past mistakes without you having to remind it. The close-out-preflight hook enforces that every task produces a retro entry (along with checking done criteria and code review).

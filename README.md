@@ -253,7 +253,7 @@ Claude Code has no memory between sessions. When you start a new conversation, i
 
 **Status is never "done."** Claude Code sets status to "needs verification" when it believes the work is complete. Only you can close a task, after walking through every Done Criterion. This prevents premature declarations of victory.
 
-**Done Criteria are hook-enforced.** The `require-done-criteria-before-close` hook blocks any attempt to move a task file from `open/` to `closed/` if unchecked `- [ ]` items remain. Claude cannot close a task until every criterion is marked `[x]` — and only you can mark them.
+**Done Criteria are hook-enforced.** The `close-out-preflight` hook blocks any attempt to move a task file from `open/` to `closed/` if unchecked `- [ ]` items remain, if no retro entry exists, or if code review is incomplete. All failures are reported in a single message. Claude cannot close a task until every criterion is marked `[x]` — and only you can mark them.
 
 **Attempts log is append-only.** Every attempt gets logged immediately after it is tried -- not batched at session end. Never delete or overwrite previous entries. If Claude tried three things in one session, there are three separate dated entries. This creates a complete history that prevents retrying failed approaches.
 
@@ -312,17 +312,15 @@ Rules in CLAUDE.md work because Claude reads them. Hooks work even when Claude d
 |------|---------|--------------|----------|
 | `session-start` | Session starts or resumes | Injects workflow rules reminder and recent retro entries | Global |
 | `stop-require-summary` | Agent stops | Blocks stopping without a 4-part close-out summary (what changed, test results, what is left, task file status declaration) | Global |
-| `guard-task-status` | After Write/Edit to task files | Prevents setting status to "done" or "complete" -- only "needs verification" allowed | Global |
-| `require-done-criteria-before-close` | `mv` command (open -> closed) | Blocks task close-out unless ALL Done Criteria checkboxes are `[x]` | Global |
-| `require-retro-before-close` | `mv` command (open -> closed) | Requires a retro entry in RETRO.md before allowing task file to move to closed/ | Global |
-| `require-review-before-close` | `mv` command (open -> closed) | Requires code review to be "completed" or "not required" before allowing task close | Global |
+| `guard-task-status` | Write/Edit to task files | Prevents attempts log overwrites | Global |
+| `close-out-preflight` | `mv` command (open -> closed) | Checks all 3 close-out conditions (done criteria, retro entry, code review) and reports all failures in one message | Global |
 | `teammate-require-summary` | Teammate goes idle | Requires completion summary (files changed, test results) from agent team teammates | Global |
 | `require-venv` | Bash command | Blocks Python/pip/pytest commands that do not activate virtualenv first | Project |
 | `task-require-tests` | Task completion | Runs the test suite before allowing a task to be marked complete -- fails block completion | Project |
 
 ### Global vs Project Hooks
 
-**Global hooks** live in `~/.claude/hooks/` and are registered in `~/.claude/settings.json`. They enforce workflow rules that apply to every project: task file discipline, session summaries, retro logging. Install these once and they work everywhere.
+**Global hooks** live in `~/.claude/hooks/` and are registered in `~/.claude/settings.json`. They enforce workflow rules that apply to every project: task file discipline, session summaries, close-out preflight checks. Install these once and they work everywhere.
 
 **Project hooks** live in `.claude/hooks/` inside your project and are registered in `.claude/settings.json` (project-level). They enforce project-specific rules: virtualenv activation for Python projects, test suite execution, linting requirements. Customize these per project and per language.
 
@@ -333,7 +331,7 @@ Hooks are shell scripts that receive JSON on stdin with context about the action
 - **Exit 0** -- allow the action to proceed
 - **Exit 2 + write to stderr** -- block the action and show a message to Claude Code explaining why
 
-Example: the `guard-task-status` hook reads the content being written, checks if it contains `Status: done`, and blocks the write with a message telling Claude to use "needs verification" instead.
+Example: the `guard-task-status` hook reads the content being written to a task file and blocks overwrites that would reduce the number of Attempts log entries.
 
 ### Customizing Project Hooks
 
@@ -373,7 +371,7 @@ Claude Code automatically reads skill files when it needs domain knowledge for a
 
 ## 9. Code Review -- Mandatory Before Close-Out
 
-Every task that modifies code must go through a code review before it can be closed out. This is enforced by the `require-review-before-close` hook -- you literally cannot move a task file to `docs/tasks/closed/` without it.
+Every task that modifies code must go through a code review before it can be closed out. This is enforced by the `close-out-preflight` hook -- you literally cannot move a task file to `docs/tasks/closed/` without it (along with done criteria and retro entry checks).
 
 ### Why This Exists
 
@@ -434,7 +432,7 @@ This means Claude starts every session knowing the most recent lessons from your
 
 ### How It Gets Written
 
-When you say "close it out" on a completed task, Claude Code appends a retro entry before moving the task file to `docs/tasks/closed/`. The `require-retro-before-close` hook enforces this -- it blocks the `mv` command if no matching entry exists in RETRO.md.
+When you say "close it out" on a completed task, Claude Code appends a retro entry before moving the task file to `docs/tasks/closed/`. The `close-out-preflight` hook enforces this -- it blocks the `mv` command if no matching entry exists in RETRO.md (along with checking done criteria and code review status).
 
 ### What Makes a Good Entry
 
@@ -454,7 +452,7 @@ Claude Code uses two settings files that control hooks, environment variables, a
 ### Global Settings (`~/.claude/settings.json`)
 
 Applies to all projects. Contains:
-- Hook registrations for global hooks (session-start, stop-require-summary, guard-task-status, require-done-criteria-before-close, require-retro-before-close, teammate-require-summary)
+- Hook registrations for global hooks (session-start, stop-require-summary, guard-task-status, close-out-preflight, teammate-require-summary)
 - Environment variables (e.g., enabling agent teams)
 - Login and authentication preferences
 
@@ -515,12 +513,7 @@ Applies to all projects. Contains:
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/require-done-criteria-before-close.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/require-retro-before-close.sh",
+            "command": "bash ~/.claude/hooks/close-out-preflight.sh",
             "timeout": 5
           }
         ]
@@ -710,10 +703,8 @@ workflow-starter-kit/
 |   |-- global/                        # Hooks for ~/.claude/hooks/
 |   |   |-- session-start.sh           # Inject workflow rules + retro entries
 |   |   |-- stop-require-summary.sh    # Block stop without close-out summary
-|   |   |-- guard-task-status.sh       # Prevent status = "done"
-|   |   |-- require-done-criteria-before-close.sh  # Block close with unchecked criteria
-|   |   |-- require-retro-before-close.sh  # Require retro before task close
-|   |   |-- require-review-before-close.sh # Require code review before task close
+|   |   |-- guard-task-status.sh       # Prevent attempts log overwrites
+|   |   |-- close-out-preflight.sh    # Combined close-out check (criteria + retro + review)
 |   |   +-- teammate-require-summary.sh    # Require teammate completion summary
 |   |
 |   +-- project/                       # Example hooks for .claude/hooks/

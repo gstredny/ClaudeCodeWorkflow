@@ -24,9 +24,15 @@
 - The stop hook enforces the declaration (reminder); this rule defines when updates are required (enforcement)
 
 **WHEN FIX WORKS:**
-- Set status to "needs verification" (NEVER "done").
+- Set status to "needs verification".
 - **NEVER move to `docs/tasks/closed/`** - task stays in `open/` until user explicitly approves.
 - After successful fix (code works + tests pass + committed) -> IMMEDIATELY ask: "This fix appears to be working. Want me to walk through the Done Criteria to close out this task?"
+- **Close-out sequence (do ALL before attempting `mv`):**
+  1. Walk through EVERY Done Criterion with the user -- mark each `[x]` only after user confirms
+  2. Write retro entry in `docs/tasks/RETRO.md` (### [date] Task: task-name)
+  3. Set `## Code Review:` field to `completed` or `not required`
+  4. Move task file to `docs/tasks/closed/`
+- A preflight hook checks all 3 conditions on `mv` and reports all failures at once.
 
 **ONLY USER CAN SAY A TASK IS COMPLETE.**
 
@@ -154,8 +160,8 @@ Workflow rules are enforced by hooks at two levels:
 ### Global hooks (~/.claude/hooks/) -- apply to ALL projects:
 - **SessionStart**: Injects workflow reminders on every new or resumed session
 - **Stop**: Blocks stopping without a detailed close-out summary (every file modified, test counts, specific next steps)
-- **PostToolUse/Write|Edit**: Prevents setting task status to "done" and catches attempts log overwrites
-- **PreToolUse/Bash**: Blocks task close-out without retro entry AND without completed code review
+- **PostToolUse/Write|Edit**: Catches attempts log overwrites
+- **PreToolUse/Bash**: Combined close-out preflight — checks done criteria, retro entry, and code review in one pass
 - **TeammateIdle**: Requires agent team teammates to report completion summary before going idle
 
 ### Project hooks (.claude/hooks/) -- [CUSTOMIZE] per project:

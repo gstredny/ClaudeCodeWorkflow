@@ -6,8 +6,8 @@
 |------|-------------|
 | **session-start** | Injects workflow rules + recent retro entries |
 | **stop-require-summary** | Blocks stopping without close-out summary |
-| **guard-task-status** | Prevents setting status to "done" |
-| **require-retro-before-close** | Requires retro entry before closing task |
+| **guard-task-status** | Prevents attempts log overwrites |
+| **close-out-preflight** | Checks done criteria, retro entry, and code review in one pass |
 | **teammate-require-summary** | Requires completion report from teammates |
 | **require-venv** | Blocks Python commands without venv |
 | **task-require-tests** | Runs tests before task completion |
