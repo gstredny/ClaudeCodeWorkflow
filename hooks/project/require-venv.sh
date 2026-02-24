@@ -15,7 +15,23 @@
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')
 
-if echo "$COMMAND" | grep -qE '(^|\s|&&|\|\||;)(python3?|pip3?|pytest|uvicorn|fastapi|alembic)\s'; then
+# Split command into segments on &&, ||, ;, | and check if any segment's
+# first word (the actual command) is a Python keyword. This avoids false
+# positives when Python keywords appear as arguments (e.g., grep python file.py).
+PYTHON_CMDS='python|python3|pip|pip3|pytest|uvicorn|fastapi|alembic'
+FOUND_PYTHON_CMD=false
+
+# Split on &&, ||, ;, | delimiters and check first word of each segment
+while IFS= read -r segment; do
+  # Trim leading whitespace and extract the first word (the command name)
+  first_word=$(echo "$segment" | sed 's/^[[:space:]]*//' | awk '{print $1}')
+  if echo "$first_word" | grep -qE "^(${PYTHON_CMDS})$"; then
+    FOUND_PYTHON_CMD=true
+    break
+  fi
+done <<< "$(echo "$COMMAND" | sed 's/&&/\n/g; s/||/\n/g; s/;/\n/g; s/|/\n/g')"
+
+if $FOUND_PYTHON_CMD; then
   if echo "$COMMAND" | grep -qE 'source\s+\.venv/bin/activate'; then
     exit 0
   fi
