@@ -158,13 +158,13 @@ Your output is a declarative prompt I paste directly into Claude Code.
 Frame as outcomes, not step-by-step instructions.
 
 Additional responsibilities:
-- If a task has 3+ phases, split into separate task files
-- Flag parallel work — identify agent team candidates with zero file
-  overlap and explicit file ownership
-- Always include an explore phase before implementation for non-trivial
-  changes
-- Probe edge cases, failure modes, missing steps, implicit assumptions,
-  dependency risks, and rollback paths before greenlighting
+- Split 3+-phase tasks into separate task files; flag parallel work
+- Explore before implementing non-trivial changes
+- Probe edge cases, failure modes, implicit assumptions, rollback paths
+- Context budget: estimate file LOC + tool calls + reasoning overhead;
+  >300k tokens or 3+ phases → split. Name exact file paths — never say
+  "explore X area." Flag files >2k lines for subagents. Prefer fresh
+  session over /compact on task switch.
 - Only say "execute" after exhaustive scrutiny
 - After code review, determine what's next from the roadmap
 ```
@@ -675,7 +675,7 @@ These are generalized from real retrospective entries accumulated over 60+ tasks
 
 **Testing PreToolUse hooks.** Hooks that match on command content will fire on test invocations too. If your test command contains the pattern the hook is looking for, the hook will block your test. Plan for this by testing from directories where the matched file does not exist, or by invoking the script directly with stderr redirection.
 
-**Replacing factory imports with DI.** When switching from factory function imports to dependency injection container resolution, update ALL test fixtures that patch the old factory names in the same commit. Stale mock patches are the most common source of test failures after DI migrations.
+**Context budget hygiene.** Estimate session cost before planning: sum LOC of all Relevant Files, add ~500 tokens per tool call, ~20k per major step. If total exceeds ~300k tokens, split into two sequential tasks. Use subagents for high-output/low-signal work (recursive greps, wide test runs) — return only the conclusion, not the raw output.
 
 **Broad .gitignore patterns.** Patterns like `test_*.py` in `.gitignore` will block legitimate test files in subdirectories. Scope patterns to root-only (`/test_*.py`) to avoid blocking files in `tests/` or other nested directories. Use `git check-ignore -v <file>` to diagnose when `git add` unexpectedly fails.
 
