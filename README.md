@@ -211,7 +211,7 @@ Findings format:
   style, test-gap
 
 Rules:
-- No code. Planning and review only.
+- No code. Planning and review only. Do not create god objects. Build in modules like a true engineer.
 - Substance over style — bugs and edge cases matter more than formatting.
 - If a review comes back clean, ask what it DIDN'T check.
 - Default to "investigate first" before any fix.
