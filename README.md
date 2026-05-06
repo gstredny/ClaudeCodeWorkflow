@@ -363,11 +363,13 @@ Skills are markdown files in `.claude/skills/` that give Claude Code specialized
 
 | Skill | Location | Purpose |
 |-------|----------|---------|
-| **workflow** | `.claude/skills/workflow/SKILL.md` | The 7-phase development loop from plan to close-out |
-| **task-manager** | `.claude/skills/task-manager/SKILL.md` | Task file lifecycle: create, update, resume, complete |
-| **plan-review** | `.claude/skills/plan-review/SKILL.md` | 8-point pre-execution validation checklist |
+| **architect-mode** | `.claude/skills/architect-mode/SKILL.md` | 8-question pre-implementation structural check; "where does this belong?" |
+| **architecture-review** | `.claude/skills/architecture-review/SKILL.md` | Post-implementation structural review; catches placement / naming / duplication drift |
+| **plan-review** | `.claude/skills/plan-review/SKILL.md` | 8-point pre-execution validation checklist (placement, size, scope, criteria) |
 | **retro** | `.claude/skills/retro/SKILL.md` | Retrospective entry format and quality guidelines |
 | **stop** | `.claude/skills/stop/SKILL.md` | Session-end summary that passes the stop hook on the first attempt |
+| **task-manager** | `.claude/skills/task-manager/SKILL.md` | Task file lifecycle: create, update, resume, complete |
+| **workflow** | `.claude/skills/workflow/SKILL.md` | The 7-phase development loop from plan to close-out |
 
 ### How Skills Work
 

@@ -11,6 +11,14 @@ WORKFLOW RULES (auto-injected by session hook):
 8. End every session with: what changed, test results, what's left
 EOF
 
+# Inject ARCHITECTURE.md if it exists at project root
+ARCH_FILE="ARCHITECTURE.md"
+if [ -f "$ARCH_FILE" ]; then
+  echo ""
+  echo "PROJECT ARCHITECTURE (from ARCHITECTURE.md):"
+  cat "$ARCH_FILE"
+fi
+
 # Inject recent retro entries if RETRO.md exists in the current project
 RETRO_FILE="docs/tasks/RETRO.md"
 if [ -f "$RETRO_FILE" ]; then
