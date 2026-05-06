@@ -103,6 +103,34 @@ TASK FILE TEMPLATE:
 - Ambiguous -> ask: "Should I implement this now or explore first?"
 - Do not write a plan document when the user has already described the exact changes to make
 
+### 7. NO GOD OBJECTS
+> **WHY:** The 500-line cap is a smoke alarm, not a fire code.
+> The real rule is "one file, one reason to change" — but humans
+> argue about that forever, so we use line count as a dumb-but-
+> measurable proxy. When a file crosses 500 lines, it's almost
+> always because two responsibilities snuck in. The cap forces
+> the split conversation that should have happened at line 200
+> but didn't, because Claude doesn't feel the "and" the way a
+> senior engineer does.
+
+- File budget: 500 lines maximum
+- Function budget: 50 lines maximum
+- One class per file
+
+### 8. RULE OF THREE
+> **WHY:** Premature shared modules become god objects too.
+> Don't extract a "shared" module until 3 real callers exist.
+
+- Don't extract until 3 callers
+- Three similar lines beats a premature abstraction
+
+### 9. ONE CONCEPT PER COMMIT
+> **WHY:** God objects grow from 12 unrelated changes pretending
+> to be one feature. Tiny commits force naming.
+
+- One conceptual change per commit
+- If you can't name what changed in 6 words, split the commit
+
 ### [CUSTOMIZE] Add Your Project-Specific Rules Below
 
 <!--
@@ -183,9 +211,47 @@ Workflow rules are enforced by hooks at two levels:
 
 ### Project hooks (.claude/hooks/) -- [CUSTOMIZE] per project:
 - **PreToolUse/Bash**: [CUSTOMIZE: e.g., blocks Python commands without venv activation]
+- **PreToolUse/Write|Edit|MultiEdit**: filesize-guard blocks writes that push files past `MAX_FILE_LINES` (default 500); files in `.claude/filesize-baseline.txt` are grandfathered under shrink-or-equal
 - **TaskCompleted**: [CUSTOMIZE: e.g., runs pytest before allowing task completion]
 
 <!--
 To set up hooks, see the hooks/ directory in the workflow-starter-kit for
 ready-to-use hook scripts and configuration examples.
 -->
+
+---
+
+## Architect Questions to Ask Constantly
+
+1. Where does this belong, and why there?
+2. What else lives in that file/module? Are they really the same
+   kind of thing? **The "and" test:** describe the file in one
+   sentence with no "and". If you can't, two responsibilities
+   are sharing one room.
+3. What changes together with this?
+4. If [business rule] changes, how many files have to change?
+   **Sweet spot: 2–4 files for a typical change.** 14 files →
+   boundaries are too granular. 1 file that's 2000 lines →
+   boundaries are too coarse.
+5. Is anything else doing something similar? Should they share?
+6. What's the simplest version of this? Are we building more
+   than we need?
+7. Can you explain this without using the words "utils,"
+   "helper," "manager," or "handler"?
+8. If a new engineer joined tomorrow, which file would confuse
+   them most? **The 60-second test:** can they load this file's
+   purpose in 60 seconds? If they're scrolling for 10 minutes,
+   split.
+
+---
+
+## Vocabulary
+
+- **Module** — A file (or directory of files) that exposes a single concept to the rest of the codebase.
+- **Function** — A named unit of work with explicit inputs, an explicit return, and ideally no hidden state.
+- **Class** — A bundle of related state plus the operations that act on it; lives in its own file when non-trivial.
+- **Dependency** — Something a module needs from elsewhere to do its job (another module, a service, a piece of config).
+- **Contract / Interface** — The promise a module makes to its callers about inputs, outputs, and side effects, separate from how it fulfills that promise.
+- **Coupling** — How much one module's internals must change when another module changes. Lower is better.
+- **Cohesion** — How tightly the things inside one module relate to each other. Higher is better.
+- **Side effect** — Anything a function does beyond returning a value (writes a file, sends a request, mutates shared state). Make these explicit.

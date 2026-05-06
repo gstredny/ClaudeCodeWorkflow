@@ -327,6 +327,7 @@ Rules in CLAUDE.md work because Claude reads them. Hooks work even when Claude d
 | `teammate-require-summary` | Teammate goes idle | Requires completion summary (files changed, test results) from agent team teammates | Global |
 | `require-venv` | Bash command | Blocks Python/pip/pytest commands that do not activate virtualenv first | Project |
 | `task-require-tests` | Task completion | Runs the test suite before allowing a task to be marked complete -- fails block completion | Project |
+| `filesize-guard` | Write/Edit/MultiEdit | Blocks writes that would exceed `MAX_FILE_LINES` (default 500); grandfathers files in `.claude/filesize-baseline.txt` under shrink-or-equal | Project |
 
 ### Global vs Project Hooks
 
@@ -364,7 +365,7 @@ Skills are markdown files in `.claude/skills/` that give Claude Code specialized
 |-------|----------|---------|
 | **workflow** | `.claude/skills/workflow/SKILL.md` | The 7-phase development loop from plan to close-out |
 | **task-manager** | `.claude/skills/task-manager/SKILL.md` | Task file lifecycle: create, update, resume, complete |
-| **plan-review** | `.claude/skills/plan-review/SKILL.md` | 6-point pre-execution validation checklist |
+| **plan-review** | `.claude/skills/plan-review/SKILL.md` | 8-point pre-execution validation checklist |
 | **retro** | `.claude/skills/retro/SKILL.md` | Retrospective entry format and quality guidelines |
 | **stop** | `.claude/skills/stop/SKILL.md` | Session-end summary that passes the stop hook on the first attempt |
 
