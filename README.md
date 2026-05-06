@@ -8,6 +8,8 @@ A battle-tested system for getting reliable, repeatable results from Claude Code
 
 Claude Code forgets everything between sessions. Every time you start a new conversation, it starts from zero -- no memory of what it tried, what failed, or where it left off. This workflow solves that problem with a simple insight: **declarative, not imperative.** Instead of giving Claude step-by-step instructions (which break when anything unexpected happens), you give it persistent context: task files that track state across sessions, a CLAUDE.md file that encodes project rules and their consequences, automated hooks that enforce discipline, and a retrospective log that captures lessons learned. The result is an AI assistant that picks up exactly where it left off, never retries failed approaches, and improves over time. This starter kit packages the entire system so you can drop it into any project in five minutes.
 
+This workflow operates in three modes. **Teacher mode** (before writing) — Claude proposes architectures, explains tradeoffs, builds your vocabulary. **Builder mode** (the typing) — Claude implements within the boundaries you locked in. **Critic mode** (after) — Claude reviews its own output as if a stranger wrote it. The trap most users fall into is using only Builder mode.
+
 ---
 
 ## 2. Quick Start (5 Minutes)
@@ -141,6 +143,8 @@ You are a senior software engineer. Your job is to help me define
 tasks before I send them to Claude Code for implementation.
 
 Rules:
+- Before writing the prompt: name the architectural layer this change belongs to. Frame the prompt around the boundary, not the symptom.
+- Propose 2-3 architectures with tradeoffs before recommending one. List which modules exist in each, what each owns, and the main tradeoff. No code.
 - No code. Planning only.
 - Push for robust, long-term solutions — no band-aids.
 - Challenge my assumptions. Find gaps in my thinking.
@@ -178,29 +182,34 @@ Copy this into a new Claude AI chat after Phase 4 execution completes and you're
 You are my code review senior software engineer. I implement features in Claude Code, 
 then bring you the results. Your job:
 
-1. **Challenge the implementation, not just the tests.** Tests passing 
+1. **Structural-only pass first.** Before the multi-dimensional review, 
+   run a structural-only pass using the architecture-review skill. 
+   File-size growth, misplaced responsibilities, and vague names get 
+   caught here cheaply.
+
+2. **Challenge the implementation, not just the tests.** Tests passing 
    doesn't mean the code is correct. Probe whether the change actually 
    solves the problem and whether it introduces new problems.
 
-2. **Ask hard questions before writing the review prompt.** Identify 
+3. **Ask hard questions before writing the review prompt.** Identify 
    assumptions, edge cases, and failure modes from the summary alone. 
    Make me answer them. This often catches issues cheaper than a 
    line-by-line review.
 
-3. **Write review prompts for Claude Code.** Structured prompts with 
+4. **Write review prompts for Claude Code.** Structured prompts with 
    specific files, specific dimensions (architecture, edge cases, error 
    handling, security, performance, test coverage), and a findings format. 
    Split into agents by file ownership for large changes.
 
-4. **Scrutinize the review results.** A grep-based review that confirms 
+5. **Scrutinize the review results.** A grep-based review that confirms 
    removals are clean is not a full review. Push for a second pass on 
    replacement correctness, caller-side impacts, and behavioral changes 
    under failure.
 
-5. **Gate execution.** Don't say "execute" until the plan survives 
+6. **Gate execution.** Don't say "execute" until the plan survives 
    exhaustive scrutiny. Every gap found before execution saves 10x.
 
-6. **Write fix plans when review finds issues.** Investigation-first 
+7. **Write fix plans when review finds issues.** Investigation-first 
    (understand before changing), specific file/line targets, ordered 
    execution, verification steps.
 
@@ -659,6 +668,14 @@ For fully autonomous multi-step execution, this workflow integrates with the Ral
 - Always update CLAUDE.md with patterns and gotchas discovered during the loop
 
 See `~/ralph-system/` for full documentation.
+
+---
+
+## For Non-Coders
+
+You don't need to learn to write code. You need to learn to read it structurally and ask the right questions. The shape of a system — what each module owns, where boundaries live, which responsibilities are mixed — is something you can spot without ever writing a line yourself.
+
+You are the PM and architect; Claude is the engineering team. Lead with intent, not implementation. The `architect-mode` skill (`.claude/skills/architect-mode/SKILL.md`) and the Architect Questions section in CLAUDE.md give you the vocabulary and prompts to do this consistently.
 
 ---
 
