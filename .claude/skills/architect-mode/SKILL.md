@@ -34,7 +34,7 @@ Answer each one **out loud, in writing, with a reason** — not "yes" / "no". Sa
 1. Where does this belong, and why there?
 2. What else lives in that file/module? Are they really the same kind of thing? **The "and" test:** describe the file in one sentence with no "and". If you can't, two responsibilities are sharing one room.
 3. What changes together with this?
-4. If [business rule] changes, how many files have to change? **Sweet spot: 2-4 files for a typical change.** 14 files → boundaries are too granular. 1 file that's 2000 lines → boundaries are too coarse.
+4. If [business rule] changes, how many files have to change? **Sweet spot: 2–4 files for a typical change.** 14 files → boundaries are too granular. 1 file that's 2000 lines → boundaries are too coarse.
 5. Is anything else doing something similar? Should they share?
 6. What's the simplest version of this? Are we building more than we need?
 7. Can you explain this without using the words "utils," "helper," "manager," or "handler"?

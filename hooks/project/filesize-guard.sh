@@ -24,6 +24,26 @@ count_file_lines() {
   awk 'END { print NR + 0 }' "$1"
 }
 
+count_fixed_occurrences() {
+  [ -f "$2" ] || { printf '0\n'; return; }
+  [ -n "$1" ] || { printf '0\n'; return; }
+  awk -v needle="$1" '
+    {
+      haystack = haystack $0 ORS
+    }
+    END {
+      count = 0
+      start = 1
+      needle_len = length(needle)
+      while ((pos = index(substr(haystack, start), needle)) > 0) {
+        count++
+        start += pos + needle_len - 1
+      }
+      print count
+    }
+  ' "$2"
+}
+
 is_grandfathered() {
   [ -f "$BASELINE_FILE" ] || return 1
   grep -v '^[[:space:]]*#' "$BASELINE_FILE" | grep -v '^[[:space:]]*$' | grep -Fxq "$1"
@@ -57,7 +77,13 @@ case "$TOOL_NAME" in
     NEW_STRING=$(printf '%s' "$INPUT" | jq -r '.tool_input.new_string // empty')
     OLD_LINES=$(count_text_lines "$OLD_STRING")
     NEW_LINES=$(count_text_lines "$NEW_STRING")
-    PROJECTED_LINES=$((CURRENT_LINES + NEW_LINES - OLD_LINES))
+    REPLACE_ALL=$(printf '%s' "$INPUT" | jq -r 'if .tool_input.replace_all == true then "true" else "false" end')
+    if [ "$REPLACE_ALL" = "true" ]; then
+      OCCURRENCE_COUNT=$(count_fixed_occurrences "$OLD_STRING" "$FILE_PATH")
+      PROJECTED_LINES=$((CURRENT_LINES + OCCURRENCE_COUNT * (NEW_LINES - OLD_LINES)))
+    else
+      PROJECTED_LINES=$((CURRENT_LINES + NEW_LINES - OLD_LINES))
+    fi
     ;;
   MultiEdit)
     DELTA=$(printf '%s' "$INPUT" | jq -r '
